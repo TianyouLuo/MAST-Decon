@@ -7,14 +7,14 @@ library(tidyverse)
 library(data.table)
 #library(jcolors)
 
-stdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/ST8059048/"
+stdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/ST8059050/"
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
-RCTDdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/"
+RCTDdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/ST8059050/"
 
 ##### read in single cell and ST data ####
 ref = fread(file.path(scRNAdir,"sc_cnt.raw.txt"))
 cluster = fread(file.path(scRNAdir,"sc_cnt.subclass.tsv"))
-spots <- fread(file.path(stdir,"ST8059048_processed.tsv")) # load in counts matrix
+spots <- fread(file.path(stdir,"ST8059050_processed.tsv")) # load in counts matrix
 spots$gene = as.character(spots$gene)
 overlap_gene = intersect(spots$gene, colnames(ref)[2:dim(ref)[2]])
 ref_overlap = ref[,c("sample_name", overlap_gene), with=FALSE]
@@ -46,6 +46,7 @@ ref_mat_t = t(ref_mat)
 reference <- Reference(ref_mat_t, cell_types, nUMI)
 saveRDS(reference, file.path(RCTDdir,'SCRef.rds'))
 
+##reference=readRDS(file.path(RCTDdir,'SCRef.rds'))
 
 #### Spatial RNA files ####
 spots_mat = as.data.frame(spots)
