@@ -8,7 +8,7 @@ library(data.table)
 #library(jcolors)
 
 slice = "ST8059048"
-subsample = "1500"
+subsample = "2500"
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
@@ -89,16 +89,31 @@ if (is.na(subsample)) {
 
 #### Visualize results ####
 RCTD_results_multi <- myRCTD_multi@results
-RCTD_norm_weights = as.matrix(sweep(RCTD_results_multi$weights, 1, rowSums(RCTD_results_multi$weights), '/'))
+RCTD_results_mat = NULL
+for (s in 1:length(RCTD_results_multi)){
+  RCTD_results_mat = bind_rows(RCTD_results_mat, RCTD_results_multi[[s]]$all_weights)
+}
+RCTD_results_mat = as.matrix(RCTD_results_mat)
+rownames(RCTD_results_mat) = names(myRCTD_multi@spatialRNA@nUMI)
+
+keep.maxCT = function(x, keep = 4, threshold = 0.02){
+  x[rank(-x, ties.method = "random") > 4] = 0
+  x = x/sum(x)
+  x[x <= threshold] = 0
+  x = x/sum(x)
+  return(x)
+}
+
+RCTD_norm_weights = t(apply(RCTD_results_mat, 1, keep.maxCT, keep = 4))
 #colnames(RCTD_norm_weights) = numeric_celltype$assigned_cluster
 RCTD_norm_weights_tibb = as_tibble(RCTD_norm_weights, rownames = "barcodes")
 RCTD_results_loc = coords %>%
   as_tibble(rownames = "barcodes") %>%
   right_join(RCTD_norm_weights_tibb, by="barcodes")
 if (is.na(subsample)){
-  write_csv(RCTD_results_loc, file.path(RCTDdir, "RCTD_multi_norm.csv"))
+  write_csv(RCTD_results_loc, file.path(RCTDdir, "RCTD_multi4_norm.csv"))
 } else {
-  write_csv(RCTD_results_loc, file.path(RCTDdir, paste0("sub",subsample), "RCTD_multi_norm.csv"))
+  write_csv(RCTD_results_loc, file.path(RCTDdir, paste0("sub",subsample), "RCTD_multi4_norm.csv"))
 }
 
 library(scatterpie)
@@ -110,7 +125,7 @@ STpie = ggplot() +
   coord_equal()
 
 if (is.na(subsample)) {
-  ggsave(file.path(RCTDdir, "RCTD_multi.png"), STpie, width = 12, height = 8)
+  ggsave(file.path(RCTDdir, "RCTD_multi4.png"), STpie, width = 12, height = 8)
 } else {
-  ggsave(file.path(RCTDdir, paste0("sub", subsample),"RCTD_multi.png"), STpie, width = 12, height = 8)
+  ggsave(file.path(RCTDdir, paste0("sub", subsample),"RCTD_multi4.png"), STpie, width = 12, height = 8)
 }
