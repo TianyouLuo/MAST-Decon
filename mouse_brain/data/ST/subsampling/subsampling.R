@@ -42,7 +42,7 @@ write.table(ST_sub3500_process, file.path(STdir, "ST8059048_sub3500_processed.ts
             row.names=F,col.names=T,sep="\t",quote=F)
 
 set.seed(805)
-ST_sub1500 = subsample.ST(ST_orig, depth = 1500, sd = 500)
+ST_sub1500 = subsample.ST(ST_orig, depth = 1500, sd = 200)
 ST_sub1500_process = process.ST(ST_sub1500)
 write.table(ST_sub1500_process, file.path(STdir, "ST8059048_sub1500_processed.tsv"),
             row.names=F,col.names=T,sep="\t",quote=F)

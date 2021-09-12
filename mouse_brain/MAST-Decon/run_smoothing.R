@@ -4,8 +4,9 @@ library(tidyverse)
 library(optimx)
 library(scatterpie)
 
-RCTDdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/ST8059050/"
-resultdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/ST8059050/"
+RCTDdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/ST8059048/sub1500/"
+resultdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/ST8059048/sub1500/"
+smoothing = "med"
 
 source("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/smoothing.R")
 RCTD = readRDS(file.path(RCTDdir, "RCTD_full.rds"))
@@ -19,13 +20,20 @@ loc = RCTD@spatialRNA@coords
 distmat = dist.mat(loc)
 
 
-#### medium smoothing #####
+#### medium smoothing ####
+if (smoothing == "med") {
+  sm = 1
+} else if (smoothing == "high") {
+  sm = 2
+} else if (smoothing == "low") {
+  sm = 0.5
+}
 results = train.smooth(spatialRNA = spatialRNA, theta0 = w, UMI = UMI, 
                        cell_type_mean_norm = cell_type_mean_norm, distmat = distmat,
-                       c = 1, radius_seq = c(221, 382, 442), tol = 10^-6, trace = 0)
+                       c = sm, radius_seq = c(221, 382, 442), tol = 10^-6, trace = 0)
 
 results_tibb = as_tibble(results, rownames = "barcodes")
-write_csv(results_tibb, file.path(resultdir, "smoothing_medC.csv"))
+write_csv(results_tibb, file.path(resultdir, paste0("smoothing_", smoothing, "C.csv")))
 
 results_norm = results_tibb
 sum_celltype = apply(results_tibb[,-1], 1, sum)
@@ -39,4 +47,4 @@ ggplot() +
   geom_scatterpie(aes(x = ycoord, y = 10000-xcoord), data = results_norm_loc,
                   cols=celltype_names, pie_scale = 0.5) +
   coord_equal() +
-  ggsave(file.path(resultdir, "smoothing_medC.png"), width = 12, height = 8)
+  ggsave(file.path(resultdir, paste0("smoothing_",smoothing, "C.png")), width = 12, height = 8)

@@ -8,7 +8,7 @@ library(data.table)
 #library(jcolors)
 
 slice = "ST8059048"
-subsample = "3500"
+subsample = "1500"
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
@@ -34,6 +34,8 @@ cluster_sel = cluster %>%
 
 cell_types <- cluster_sel$subclass_label
 names(cell_types) <- cluster_sel$sample_name # create cell_types named list
+cell_types[cell_types=="L2/3 IT CTX-1"]="L2-3 IT CTX-1"
+cell_types[cell_types=="L4/5 IT CTX"]="L4-5 IT CTX"
 cell_types <- as.factor(cell_types) # convert to factor data type
 
 ref_overlap_sel = ref_overlap[ref_overlap$sample_name %in% cluster_sel$sample_name, ]
@@ -50,7 +52,7 @@ ref_mat_t = t(ref_mat)
 
 ## create reference data object
 reference <- Reference(ref_mat_t, cell_types, nUMI)
-saveRDS(reference, file.path(RCTDdir,'SCRef.rds'))
+#saveRDS(reference, file.path(RCTDdir,'SCRef.rds'))
 
 ##reference=readRDS(file.path(RCTDdir,'SCRef.rds'))
 
@@ -78,37 +80,37 @@ myRCTD <- create.RCTD(puck, reference, max_cores = 1,
 
 #### run RCTD ####
 myRCTD@config$N_epoch = 20 ## the number of iterations that choose_sigma_c takes
-myRCTD_full <- run.RCTD(myRCTD, doublet_mode = 'full')
+myRCTD_multi <- run.RCTD(myRCTD, doublet_mode = 'multi')
 if (is.na(subsample)) {
-  saveRDS(myRCTD_full, file.path(RCTDdir, "RCTD_full.rds"))
+  saveRDS(myRCTD_multi, file.path(RCTDdir, "RCTD_multi.rds"))
 } else {
-  saveRDS(myRCTD_full, file.path(RCTDdir, paste0("sub",subsample),"RCTD_full.rds"))
+  saveRDS(myRCTD_multi, file.path(RCTDdir, paste0("sub",subsample),"RCTD_multi.rds"))
 }
 
 #### Visualize results ####
-RCTD_results_full <- myRCTD_full@results
-RCTD_norm_weights = as.matrix(sweep(RCTD_results_full$weights, 1, rowSums(RCTD_results_full$weights), '/'))
+RCTD_results_multi <- myRCTD_multi@results
+RCTD_norm_weights = as.matrix(sweep(RCTD_results_multi$weights, 1, rowSums(RCTD_results_multi$weights), '/'))
 #colnames(RCTD_norm_weights) = numeric_celltype$assigned_cluster
 RCTD_norm_weights_tibb = as_tibble(RCTD_norm_weights, rownames = "barcodes")
 RCTD_results_loc = coords %>%
   as_tibble(rownames = "barcodes") %>%
   right_join(RCTD_norm_weights_tibb, by="barcodes")
 if (is.na(subsample)){
-  write_csv(RCTD_results_loc, file.path(RCTDdir, "RCTD_full_norm.csv"))
+  write_csv(RCTD_results_loc, file.path(RCTDdir, "RCTD_multi_norm.csv"))
 } else {
-  write_csv(RCTD_results_loc, file.path(RCTDdir, paste0("sub",subsample), "RCTD_full_norm.csv"))
+  write_csv(RCTD_results_loc, file.path(RCTDdir, paste0("sub",subsample), "RCTD_multi_norm.csv"))
 }
 
 library(scatterpie)
 cell_type_names = colnames(RCTD_results_loc)[4:dim(RCTD_results_loc)[2]]
 
 STpie = ggplot() +
- geom_scatterpie(aes(x = ycoord, y = 10000 - xcoord), data = RCTD_results_loc,
-                 cols=cell_type_names, pie_scale = 0.5) +
- coord_equal()
+  geom_scatterpie(aes(x = ycoord, y = 10000 - xcoord), data = RCTD_results_loc,
+                  cols=cell_type_names, pie_scale = 0.5) +
+  coord_equal()
 
 if (is.na(subsample)) {
-  ggsave(file.path(RCTDdir, "RCTD_full.png"), STpie, width = 12, height = 8)
+  ggsave(file.path(RCTDdir, "RCTD_multi.png"), STpie, width = 12, height = 8)
 } else {
-  ggsave(file.path(RCTDdir, paste0("sub", subsample),"RCTD_full.png"), STpie, width = 12, height = 8)
+  ggsave(file.path(RCTDdir, paste0("sub", subsample),"RCTD_multi.png"), STpie, width = 12, height = 8)
 }
