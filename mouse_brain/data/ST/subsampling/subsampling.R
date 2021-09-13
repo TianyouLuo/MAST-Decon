@@ -46,3 +46,10 @@ ST_sub1500 = subsample.ST(ST_orig, depth = 1500, sd = 200)
 ST_sub1500_process = process.ST(ST_sub1500)
 write.table(ST_sub1500_process, file.path(STdir, "ST8059048_sub1500_processed.tsv"),
             row.names=F,col.names=T,sep="\t",quote=F)
+
+
+set.seed(1000)
+ST_sub1000 = subsample.ST(ST_orig, depth = 1000, sd = 120)
+ST_sub1000_process = process.ST(ST_sub1000)
+write.table(ST_sub1000_process, file.path(STdir, "ST8059048_sub1000_processed.tsv"),
+            row.names=F,col.names=T,sep="\t",quote=F)

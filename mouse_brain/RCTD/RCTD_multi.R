@@ -8,7 +8,7 @@ library(data.table)
 #library(jcolors)
 
 slice = "ST8059048"
-subsample = "2500"
+subsample = "1000"
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
@@ -97,7 +97,7 @@ RCTD_results_mat = as.matrix(RCTD_results_mat)
 rownames(RCTD_results_mat) = names(myRCTD_multi@spatialRNA@nUMI)
 
 keep.maxCT = function(x, keep = 4, threshold = 0.02){
-  x[rank(-x, ties.method = "random") > 4] = 0
+  x[rank(-x, ties.method = "random") > keep] = 0
   x = x/sum(x)
   x[x <= threshold] = 0
   x = x/sum(x)

@@ -106,7 +106,7 @@ pixel.logLik = function(dmaski, weight_vec, spatialRNA, thetai, UMIi, cell_type_
 
 #### first gradient ####
 #### pixel-level first gradient of log-likelihood for one neighboring pixel p(Y_i(d')|theta(d)), we ignore the epsilon part for now ####
-## cell_type_mean_norm is a matrix of dimension spot-by-celltype , theta is a vector
+## cell_type_mean_norm is a matrix of dimension spot-by-celltype, theta is a vector
 ## output is a vector with each element correspond to a gene
 pixel.pixderiv = function(Y, theta, UMI, cell_type_mean_norm){
   cell_type_mean_norm = as.matrix(cell_type_mean_norm)
@@ -171,11 +171,25 @@ get.pixelmle = function(dmaski, weight_vec, spatialRNA, thetai, UMIi, cell_type_
   return(as.matrix(unname(theta_new)))
 }
 
+#### Function to keep only top celltypes and celltypes with proportion above certain threshold ####
+keep.maxCT = function(x, keep = 4){
+  x[rank(-x, ties.method = "random") > keep] = 0
+  x = x/sum(x)
+  return(x)
+}
 
+#### Function to keep only celltypes with proportion above certain threshold ####
+keep.threshold = function(x, threshold = 0.02){
+  x = x/sum(x)
+  x[x <= threshold] = 0
+  x = x/sum(x)
+  return(x)
+}
 
 
 ######## update theta in each iteration #######
-new.iter = function(distmat, spatialRNA, theta, UMI, cell_type_mean_norm, r, c, tol = 10^-6, trace = 0){
+new.iter = function(distmat, spatialRNA, theta, UMI, cell_type_mean_norm, r, c, 
+                    tol = 10^-6, trace = 0, max_CT, threshold){
   dmask = distmask.mat(distmat = distmat, r = r)
   weight = get.Wmat(distmat = distmat, r=r, theta=theta, c=c, comp_var = F)
   theta_new = theta
@@ -189,6 +203,12 @@ new.iter = function(distmat, spatialRNA, theta, UMI, cell_type_mean_norm, r, c, 
     theta_new[i,] = get.pixelmle(dmaski = dmaski, weight_vec = weight_vec, 
                                  spatialRNA = spatialRNA, thetai = thetai, UMIi = UMIi, 
                                  cell_type_mean_norm = cell_type_mean_norm, tol = tol, trace = trace)
+    if (!is.null(max_CT)) {
+      theta_new[i,] = keep.maxCT(theta_new[i,], keep = max_CT)
+    }
+    if (!is.null(threshold)) {
+      theta_new[i,] = keep.threshold(theta_new[i,], threshold = threshold)
+    }
   }
   return(theta_new)
 }
@@ -198,7 +218,8 @@ new.iter = function(distmat, spatialRNA, theta, UMI, cell_type_mean_norm, r, c, 
 
 ##### write iterations ######
 train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r0 = 505, trace = 0,
-                        s = 1.42, c = 1, iter = 4, radius_seq = NULL, tol = 10^-6){
+                        s = 1.42, c = 1, iter = 4, radius_seq = NULL, tol = 10^-6,
+                        max_CT = NULL, threshold = NULL){
   theta_update = theta0
   if (!is.null(radius_seq)){
     n_iter = length(radius_seq)
@@ -207,7 +228,8 @@ train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r
       print(paste0("r: ", radius_seq[ite]))
       theta_update = new.iter(distmat = distmat, spatialRNA = spatialRNA, r = radius_seq[ite],
                               theta = theta_update, UMI = UMI, c = c, tol = 10^-6, trace = trace,
-                              cell_type_mean_norm = cell_type_mean_norm)
+                              cell_type_mean_norm = cell_type_mean_norm,
+                              max_CT = max_CT, threshold = threshold)
     }
   } else {
     for (ite in 1:iter){
@@ -215,7 +237,8 @@ train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r
       print(paste0("r: ",r0*s^(ite-1)))
       theta_update = new.iter(distmat = distmat, spatialRNA = spatialRNA, r = r0*s^(ite-1),
                               theta = theta_update, UMI = UMI, c = c, tol = 10^-6, trace = trace,
-                              cell_type_mean_norm = cell_type_mean_norm)
+                              cell_type_mean_norm = cell_type_mean_norm,
+                              max_CT = max_CT, threshold = threshold)
     }
   }
   return(theta_update)
