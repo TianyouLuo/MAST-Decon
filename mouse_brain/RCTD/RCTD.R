@@ -8,7 +8,7 @@ library(data.table)
 #library(jcolors)
 
 slice = "ST8059048"
-subsample = "3500"
+subsample = "1000"
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
@@ -34,6 +34,8 @@ cluster_sel = cluster %>%
 
 cell_types <- cluster_sel$subclass_label
 names(cell_types) <- cluster_sel$sample_name # create cell_types named list
+cell_types[cell_types=="L2/3 IT CTX-1"]="L2-3 IT CTX-1"
+cell_types[cell_types=="L4/5 IT CTX"]="L4-5 IT CTX"
 cell_types <- as.factor(cell_types) # convert to factor data type
 
 ref_overlap_sel = ref_overlap[ref_overlap$sample_name %in% cluster_sel$sample_name, ]
@@ -50,7 +52,7 @@ ref_mat_t = t(ref_mat)
 
 ## create reference data object
 reference <- Reference(ref_mat_t, cell_types, nUMI)
-saveRDS(reference, file.path(RCTDdir,'SCRef.rds'))
+#saveRDS(reference, file.path(RCTDdir,'SCRef.rds'))
 
 ##reference=readRDS(file.path(RCTDdir,'SCRef.rds'))
 

@@ -18,11 +18,9 @@ print(paste0("RCTD dirctory: ", RCTDdir))
 print(paste0("Smoothing level: ", smoothing))
 
 source("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/smoothing.R")
-RCTD = readRDS(file.path(RCTDdir, "RCTD_multi.rds"))
-RCTD_weights = fread(file.path(RCTDdir, "RCTD_multi4_norm.csv"))
+RCTD = readRDS(file.path(RCTDdir, "RCTD_full.rds"))
 
-w = as.matrix(RCTD_weights[,4:dim(RCTD_weights)[2]])
-rownames(w) = RCTD_weights$barcodes
+w = as.matrix(RCTD@results$weights)
 UMI = RCTD@spatialRNA@nUMI
 spatialRNA = as.matrix(RCTD@spatialRNA@counts)
 cell_type_mean_norm = as.matrix(RCTD@cell_type_info$renorm[[1]])

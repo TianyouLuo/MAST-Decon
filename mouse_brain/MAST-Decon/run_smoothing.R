@@ -3,10 +3,19 @@ library(Matrix)
 library(tidyverse)
 library(optimx)
 library(scatterpie)
+library(data.table)
 
-RCTDdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/ST8059048/sub1500/"
-resultdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/ST8059048/sub1500/"
-smoothing = "med"
+args <- commandArgs(trailingOnly = TRUE)
+
+slice = args[1]
+subsample = args[2]
+smoothing = args[3]
+
+RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/",slice,"/sub",subsample)
+resultdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample)
+
+print(paste0("RCTD dirctory: ", RCTDdir))
+print(paste0("Smoothing level: ", smoothing))
 
 source("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/smoothing.R")
 RCTD = readRDS(file.path(RCTDdir, "RCTD_full.rds"))
