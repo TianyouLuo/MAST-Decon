@@ -1,7 +1,8 @@
 library(data.table)
 
-STdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/ST8059048/"
-ST_orig = fread(file.path(STdir, "ST8059048_processed.tsv"))
+slice = "ST8059050"
+STdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/",slice)
+ST_orig = fread(file.path(STdir, paste0(slice, "_processed.tsv")))
 
 ## function to subsample to a read depth for one spot
 subsample.spot = function(ST, depth){
@@ -32,24 +33,24 @@ process.ST = function(cnt){
 set.seed(2021)
 ST_sub2500 = subsample.ST(ST_orig, depth = 2500, sd = 500)
 ST_sub2500_process = process.ST(ST_sub2500)
-write.table(ST_sub2500_process, file.path(STdir, "ST8059048_sub2500_processed.tsv"),
+write.table(ST_sub2500_process, file.path(STdir, paste0(slice, "_sub2500_processed.tsv")),
             row.names=F,col.names=T,sep="\t",quote=F)
 
-set.seed(9048)
+set.seed(9050)
 ST_sub3500 = subsample.ST(ST_orig, depth = 3500, sd = 500)
 ST_sub3500_process = process.ST(ST_sub3500)
-write.table(ST_sub3500_process, file.path(STdir, "ST8059048_sub3500_processed.tsv"),
+write.table(ST_sub3500_process, file.path(STdir, paste0(slice, "_sub3500_processed.tsv")),
             row.names=F,col.names=T,sep="\t",quote=F)
 
 set.seed(805)
 ST_sub1500 = subsample.ST(ST_orig, depth = 1500, sd = 200)
 ST_sub1500_process = process.ST(ST_sub1500)
-write.table(ST_sub1500_process, file.path(STdir, "ST8059048_sub1500_processed.tsv"),
+write.table(ST_sub1500_process, file.path(STdir, paste0(slice, "_sub1500_processed.tsv")),
             row.names=F,col.names=T,sep="\t",quote=F)
 
 
 set.seed(1000)
 ST_sub1000 = subsample.ST(ST_orig, depth = 1000, sd = 120)
 ST_sub1000_process = process.ST(ST_sub1000)
-write.table(ST_sub1000_process, file.path(STdir, "ST8059048_sub1000_processed.tsv"),
+write.table(ST_sub1000_process, file.path(STdir, paste0(slice, "_sub1000_processed.tsv")),
             row.names=F,col.names=T,sep="\t",quote=F)
