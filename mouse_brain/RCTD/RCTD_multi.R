@@ -7,8 +7,8 @@ library(tidyverse)
 library(data.table)
 #library(jcolors)
 
-slice = "ST8059048"
-subsample = "1000"
+slice = "ST8059050"
+subsample = "3500"
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
