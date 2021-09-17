@@ -24,13 +24,22 @@ cal.ARI = function(annotation, weight, n_center = 6, seed = 330){
   return(ARI(result_merge$cluster, result_merge$layer))
 }
 
+keep.maxCT = function(x, keep = 4, threshold = 0.02){
+  x[rank(-x, ties.method = "random") > keep] = 0
+  x = x/sum(x)
+  x[x <= threshold] = 0
+  x = x/sum(x)
+  return(x)
+}
+
+
 for (i in 1:4){
   subsample = rownames(ARI)[i]
   annotation_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/",slice,"/annotation/",slice,"_markers_layers.csv")
-  RCTD_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/",slice,"/sub",subsample,"/RCTD_full_norm.csv")
-  low_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_lowC.csv")
-  med_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_medC.csv")
-  high_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_highC.csv")
+  RCTD_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/",slice,"/sub",subsample,"/RCTD_multi4_norm.csv")
+  low_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_lowC_max4.csv")
+  med_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_medC_max4.csv")
+  high_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/MAST-Decon/",slice,"/sub",subsample,"/smoothing_highC_max4.csv")
   stereoscope_folder = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/stereoscope/result/",slice,"_sub",subsample,"_cnt.mapped/")
   stereoscope_path = list.files(stereoscope_folder, pattern = "W*.tsv")
   stereoscope_map_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/stereoscope/result/",slice,"_mapping.txt")
@@ -42,6 +51,7 @@ for (i in 1:4){
   medsmooth = fread(med_path)
   highsmooth = fread(high_path)
   stereoscope = fread(file.path(stereoscope_folder,stereoscope_path))
+  stereoscope[,2:12] = data.table(t(apply(stereoscope[,2:12], 1, keep.maxCT, keep = 4)))
   stereoscope_map = fread(stereoscope_map_path)
   stereoscope_merge = left_join(stereoscope, 
                                 stereoscope_map %>% select(V1, V7), by = c("V1"="V7")) %>%
@@ -56,4 +66,4 @@ for (i in 1:4){
 }
 
 ARI_table = as_tibble(ARI, rownames = "nUMI")
-write_csv(ARI_table, "comparison.csv")
+write_csv(ARI_table, "comparison_max4.csv")
