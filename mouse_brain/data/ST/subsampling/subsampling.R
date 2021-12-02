@@ -1,6 +1,6 @@
 library(data.table)
 
-slice = "ST8059050"
+slice = "ST8059051"
 STdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/",slice)
 ST_orig = fread(file.path(STdir, paste0(slice, "_processed.tsv")))
 
@@ -53,4 +53,22 @@ set.seed(1000)
 ST_sub1000 = subsample.ST(ST_orig, depth = 1000, sd = 120)
 ST_sub1000_process = process.ST(ST_sub1000)
 write.table(ST_sub1000_process, file.path(STdir, paste0(slice, "_sub1000_processed.tsv")),
+            row.names=F,col.names=T,sep="\t",quote=F)
+
+set.seed(500)
+ST_sub5000 = subsample.ST(ST_orig, depth = 5000, sd = 500)
+ST_sub5000_process = process.ST(ST_sub5000)
+write.table(ST_sub5000_process, file.path(STdir, paste0(slice, "_sub5000_processed.tsv")),
+            row.names=F,col.names=T,sep="\t",quote=F)
+
+set.seed(751)
+ST_sub7500 = subsample.ST(ST_orig, depth = 7500, sd = 500)
+ST_sub7500_process = process.ST(ST_sub7500)
+write.table(ST_sub7500_process, file.path(STdir, paste0(slice, "_sub7500_processed.tsv")),
+            row.names=F,col.names=T,sep="\t",quote=F)
+
+set.seed(104)
+ST_sub10000 = subsample.ST(ST_orig, depth = 10000, sd = 1000)
+ST_sub10000_process = process.ST(ST_sub10000)
+write.table(ST_sub10000_process, file.path(STdir, paste0(slice, "_sub10000_processed.tsv")),
             row.names=F,col.names=T,sep="\t",quote=F)
