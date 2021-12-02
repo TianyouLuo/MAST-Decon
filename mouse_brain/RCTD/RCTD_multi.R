@@ -7,11 +7,18 @@ library(tidyverse)
 library(data.table)
 #library(jcolors)
 
-slice = "ST8059050"
-subsample = "3500"
+args <- commandArgs(trailingOnly = TRUE)
+
+#slice = "ST8059048"
+#subsample = "5000"
+slice = args[1]
+subsample = args[2]
 stdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/", slice)
 scRNAdir = "/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/scRNA/ssp_processed/"
 RCTDdir = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/", slice)
+
+print(RCTDdir)
+print(paste0("Subsampling:", subsample))
 
 ##### read in single cell and ST data ####
 ref = fread(file.path(scRNAdir,"sc_cnt.raw.txt"))
