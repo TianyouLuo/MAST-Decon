@@ -4,8 +4,8 @@ library(aricode)
 
 slice = "ST8059048"
 
-ARI = matrix(NA, nrow = 4, ncol = 5)
-rownames(ARI) = c("1000", "1500", "2500", "3500")
+ARI = matrix(NA, nrow = 7, ncol = 5)
+rownames(ARI) = c("1000", "1500", "2500", "3500", "5000", "7500", "10000")
 colnames(ARI) = c("RCTD", "low-smoothing", "medium-smoothing", "high-smoothing", "Stereoscope")
 
 renormalize = function(weight){
@@ -33,7 +33,7 @@ keep.maxCT = function(x, keep = 4, threshold = 0.02){
 }
 
 
-for (i in 1:4){
+for (i in 1:7){
   subsample = rownames(ARI)[i]
   annotation_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/data/ST/",slice,"/annotation/",slice,"_markers_layers.csv")
   RCTD_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/",slice,"/sub",subsample,"/RCTD_multi4_norm.csv")
@@ -46,7 +46,13 @@ for (i in 1:4){
   
   annotation = fread(annotation_path)
   colnames(annotation) = c("barcodes", "layer")
-  RCTD = fread(RCTD_path)[,c(1,4:14)]
+  if (file.exists(RCTD_path)) {
+    RCTD = fread(RCTD_path)[,c(1,4:14)]
+  } else {
+    RCTD_path = paste0("/pine/scr/t/i/tianyou/ST/mouse_brain_cell2location/RCTD/",slice,"/sub",subsample,"/RCTD_full_norm.csv")
+    RCTD = fread(RCTD_path)[,c(1,4:14)]
+    RCTD[,2:12] = data.table(t(apply(RCTD[,2:12], 1, keep.maxCT, keep = 4)))
+  }
   lowsmooth = fread(low_path)
   medsmooth = fread(med_path)
   highsmooth = fread(high_path)
@@ -66,4 +72,4 @@ for (i in 1:4){
 }
 
 ARI_table = as_tibble(ARI, rownames = "nUMI")
-write_csv(ARI_table, "comparison_max4.csv")
+write_csv(ARI_table, paste0("comparison_max4_",slice,".csv"))
