@@ -7,20 +7,19 @@ dist.mat = function(location){
 }
 
 
-## distance mask matrix: 0/1 matrix with distance matrix and r as input ##
-distmask.mat = function(distmat, r){
-  mask = matrix(NA, nrow = dim(distmat)[1], ncol = dim(distmat)[2])
-  mask[distmat <= r] = 1
-  mask[distmat > r] = 0
+## distance mask matrix: 0/1 matrix with distance matrix, r and an annotation matrix as input ##
+distmask.mat = function(distmat, r, annot=NULL){
+  mask = matrix(0, nrow = dim(distmat)[1], ncol = dim(distmat)[2])
+  if (!is.null(annot)){
+    annot_mat = dist.mat(annot)
+    mask[distmat <= r & annot_mat < 0.001] = 1
+  } else{
+    mask[distmat <= r] = 1
+  }
+  #mask[distmat > r | annot_mat > 0.001] = 0
   return(mask)
 }
 ################
-
-#### find a good starting value of radius ####
-find.r0 = function(){
-  
-}
-############################
 
 
 
@@ -57,9 +56,14 @@ get.simw = function(theta, c=1, var_mat = NULL, comp_var = F){
 
 
 ## final weight matrix ##
-get.Wmat = function(distmat, r, theta, c=1, comp_var = F){
-  Wmat = get.locw(distmat = distmat, r = r) * 
-    get.simw(theta = theta, c=c, comp_var = comp_var)
+get.Wmat = function(distmat, r, theta, c=1, comp_var = F, annotation = NULL){
+  if (!is.null(annotation)){
+    Wmat = get.locw(distmat = distmat, r = r) * 
+      get.simw(theta = theta, c=c, comp_var = comp_var)
+  } else{
+    Wmat = get.locw(distmat = distmat, r = r) * 
+      get.simw(theta = theta, c=c, comp_var = comp_var)
+  }
   return(Wmat)
 }
 
@@ -174,8 +178,8 @@ get.pixelmle = function(dmaski, weight_vec, spatialRNA, thetai, UMIi, cell_type_
 
 ######## update theta in each iteration #######
 new.iter = function(distmat, spatialRNA, theta, UMI, cell_type_mean_norm, r, c, 
-                    tol = 10^-6, trace = 0){
-  dmask = distmask.mat(distmat = distmat, r = r)
+                    tol = 10^-6, trace = 0, annot = NULL){
+  dmask = distmask.mat(distmat = distmat, r = r, annot = annot)
   weight = get.Wmat(distmat = distmat, r=r, theta=theta, c=c, comp_var = F)
   theta_new = theta
   nspot = length(UMI)
@@ -211,7 +215,8 @@ keep.threshold = function(x, threshold = 0.02){
 
 
 ##### write iterations ######
-train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r0 = 505, trace = 0,
+train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, 
+                        annot = NULL, r0 = 505, trace = 0,
                         s = 1.42, c = 1, iter = 4, radius_seq = NULL, tol = 10^-6,
                         max_CT = NULL, threshold = NULL){
   theta_update = theta0
@@ -222,7 +227,7 @@ train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r
       print(paste0("r: ", radius_seq[ite]))
       theta_update = new.iter(distmat = distmat, spatialRNA = spatialRNA, r = radius_seq[ite],
                               theta = theta_update, UMI = UMI, c = c, tol = 10^-6, trace = trace,
-                              cell_type_mean_norm = cell_type_mean_norm)
+                              cell_type_mean_norm = cell_type_mean_norm, annot = annot)
     }
   } else {
     for (ite in 1:iter){
@@ -230,7 +235,7 @@ train.smooth = function(spatialRNA, theta0, UMI, cell_type_mean_norm, distmat, r
       print(paste0("r: ",r0*s^(ite-1)))
       theta_update = new.iter(distmat = distmat, spatialRNA = spatialRNA, r = r0*s^(ite-1),
                               theta = theta_update, UMI = UMI, c = c, tol = 10^-6, trace = trace,
-                              cell_type_mean_norm = cell_type_mean_norm)
+                              cell_type_mean_norm = cell_type_mean_norm, annot = annot)
     }
   }
   if (!is.null(max_CT)){
